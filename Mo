@@ -1,0 +1,83 @@
+-- ====================================================================
+-- [ส่วนที่ 1] ระบบ Auto Farm & โจมตีความเร็วสูง (Fast Attack)
+-- ====================================================================
+local FastAttackEnabled = true
+local AttackSpeed = 0.05 -- ค่าความเร็วในการโจมตี (ยิ่งน้อยยิ่งรัว)
+
+task.spawn(function()
+    while task.wait(AttackSpeed) do
+        if FastAttackEnabled then
+            pcall(function()
+                -- สั่งการโจมตีความเร็วสูงไปที่มอนสเตอร์รอบตัว
+                local CombatFramework = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
+                local CurrentWeapon = CombatFramework.activeController.currentWeaponModel
+                if CurrentWeapon then
+                    -- คำสั่งรันความเร็วในการฟันดาบ/หมัดแบบรัวๆ
+                    CombatFramework.activeController.attack()
+                end
+            end)
+        end
+    end
+end)
+
+-- ====================================================================
+-- [ส่วนที่ 2] คลังรายชื่อผลไม้ระดับสีม่วงขึ้นไปที่ระบบจะยอมรับ (ตามที่คุณระบุ)
+-- ====================================================================
+local PremiumFruitList = {
+    -- ระดับสีแดง (Mythical)
+    ["Kitsune Fruit"] = {Name = "Kitsune (คิซึเนะ)", Rarity = "Mythical", Color = Color3.fromRGB(255, 30, 30)},
+    ["Dragon Fruit"] = {Name = "Dragon (มังกร)", Rarity = "Mythical", Color = Color3.fromRGB(255, 30, 30)},
+    ["Gas Fruit"] = {Name = "Gas (แก๊ส)", Rarity = "Mythical", Color = Color3.fromRGB(255, 30, 30)},
+    ["Yeti Fruit"] = {Name = "Yeti (เยติ)", Rarity = "Mythical", Color = Color3.fromRGB(255, 30, 30)},
+    ["White Dragon Fruit"] = {Name = "White Dragon (มังกรขาว/คัสตอม)", Rarity = "Mythical", Color = Color3.fromRGB(255, 30, 30)},
+    ["Black Dragon Fruit"] = {Name = "Black Dragon (มังกรดำ/คัสตอม)", Rarity = "Mythical", Color = Color3.fromRGB(255, 30, 30)},
+    
+    -- ระดับสีม่วง (Legendary / Epic)
+    ["Portal Fruit"] = {Name = "Portal (ประตู)", Rarity = "Legendary", Color = Color3.fromRGB(180, 30, 255)},
+    ["Dough Fruit"] = {Name = "Dough (โมจิ)", Rarity = "Mythical", Color = Color3.fromRGB(255, 30, 30)},
+    ["Leopard Fruit"] = {Name = "Leopard (เสือ)", Rarity = "Mythical", Color = Color3.fromRGB(255, 30, 30)},
+    ["T-Rex Fruit"] = {Name = "T-Rex (ทีเร็กซ์)", Rarity = "Mythical", Color = Color3.fromRGB(255, 30, 30)}
+}
+
+-- ====================================================================
+-- [ส่วนที่ 3] ฟังก์ชันระบบเช็คผลและเสกโมเดลผลไม้เข้าตัว (Client-Side Spawn)
+-- ====================================================================
+function SpawnPremiumFruit(requestedFruitName)
+    -- ตรวจสอบว่าผลไม้ที่กรอกเข้ามา อยู่ในเงื่อนไข "ระดับม่วงขึ้นไป" หรือไม่
+    local fruitData = PremiumFruitList[requestedFruitName]
+    
+    if fruitData then
+        print("======== ตรวจสอบพบผลไม้ระดับสูง ========")
+        print("ชื่อผลไม้: " .. fruitData.Name)
+        print("ระดับความหายาก: " .. fruitData.Rarity)
+        
+        -- จำลองการสร้างโมเดลผลไม้เข้าไปในกระเป๋า (Backpack) ของผู้เล่น
+        local Tool = Instance.new("Tool")
+        Tool.Name = "🔥 " .. fruitData.Name .. " [" .. fruitData.Rarity .. "]"
+        
+        local Handle = Instance.new("Part")
+        Handle.Name = "Handle"
+        Handle.Size = Vector3.new(1, 1, 1)
+        Handle.BrickColor = BrickColor.new("Bright violet") -- ใส่สีม่วง/แดงให้ตัวผลไม้
+        Handle.Parent = Tool
+        
+        -- ส่งผลไม้เข้าตัวผู้เล่น
+        Tool.Parent = game.Players.LocalPlayer.Backpack
+        return true
+    else
+        print("⚠️ ระบบปฏิเสธ: ผลไม้นี้ไม่อยู่ในรายชื่อ หรือระดับต่ำกว่าสีม่วง!")
+        return false
+    end
+end
+
+-- ====================================================================
+-- [ส่วนที่ 4] ตัวอย่างวิธีเรียกใช้งานสคริปต์
+-- ====================================================================
+-- ตัวอย่างที่ 1: สั่งเสกผลคิซึเนะ (ผ่านเงื่อนไขเพราะระดับสีแดง)
+SpawnPremiumFruit("Kitsune Fruit") 
+
+-- ตัวอย่างที่ 2: สั่งเสกผลประตู Portal (ผ่านเงื่อนไขเพราะระดับสีม่วง)
+SpawnPremiumFruit("Portal Fruit")
+
+-- ตัวอย่างที่ 3: สั่งเสกผลระดับต่ำ เช่น ผลระเบิด Bomb (จะถูกระบบปฏิเสธและไม่ยอมเสกให้)
+SpawnPremiumFruit("Bomb Fruit")
